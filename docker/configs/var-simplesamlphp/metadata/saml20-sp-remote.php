@@ -1,32 +1,32 @@
 <?php
-$metadata['https://nextcloud.local.dev.bitgrid.net/index.php/apps/user_saml/saml/metadata'] = array (
-    'entityid' => 'https://nextcloud.local.dev.bitgrid.net/index.php/apps/user_saml/saml/metadata',
-    'contacts' => 
+$metadata['https://portal.nxt.cld/index.php/apps/user_saml/saml/metadata'] = array (
+    'entityid' => 'https://portal.nxt.cld/index.php/apps/user_saml/saml/metadata',
+    'contacts' =>
     array (
     ),
     'metadata-set' => 'saml20-sp-remote',
     'expire' => 2212072296,
-    'AssertionConsumerService' => 
+    'AssertionConsumerService' =>
     array (
-      0 => 
+      0 =>
       array (
         'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-        'Location' => 'https://nextcloud.local.dev.bitgrid.net/index.php/apps/user_saml/saml/acs',
+        'Location' => 'https://portal.nxt.cld/index.php/apps/user_saml/saml/acs',
         'index' => 1,
       ),
     ),
-    'SingleLogoutService' => 
+    'SingleLogoutService' =>
     array (
-      0 => 
+      0 =>
       array (
         'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-        'Location' => 'https://nextcloud.local.dev.bitgrid.net/index.php/apps/user_saml/saml/sls',
+        'Location' => 'https://portal.nxt.cld/index.php/apps/user_saml/saml/sls',
       ),
     ),
     'NameIDFormat' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
-    'keys' => 
+    'keys' =>
     array (
-      0 => 
+      0 =>
       array (
         'encryption' => false,
         'signing' => true,

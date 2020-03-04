@@ -1,3 +1,8 @@
 FROM unicon/simplesamlphp
 
 #COPY etc-httpd/ /etc/httpd/
+
+ADD configs/var-simplesamlphp/CA/ /root/CA/
+
+RUN update-ca-trust force-enable
+RUN cp /root/CA/* /etc/pki/ca-trust/source/anchors/ && update-ca-trust extract

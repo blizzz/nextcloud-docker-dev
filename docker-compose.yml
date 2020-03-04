@@ -14,8 +14,9 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./data/ssl/:/etc/nginx/certs
-      - ./data/ssl/dhparams.pem:/etc/nginx/dhparam/dhparam.pem
+      #- ./data/ssl/dhparams.pem:/etc/nginx/dhparam/dhparam.pem
     environment:
+      DHPARAM_BITS: 2048
       DHPARAM_GENERATION: "false"
       HTTPS_METHOD: "noredirect"
       HSTS: "off"
@@ -24,45 +25,66 @@ services:
     networks:
       default:
         aliases:
-          - nextcloud${DOMAIN_SUFFIX}
-          - nextcloud2${DOMAIN_SUFFIX}
-          - nextcloud3${DOMAIN_SUFFIX}
-          - stable16${DOMAIN_SUFFIX}
-          - stable17${DOMAIN_SUFFIX}
-          - stable18${DOMAIN_SUFFIX}
-          - collabora${DOMAIN_SUFFIX}
-          - onlyoffice${DOMAIN_SUFFIX}
-          - collabora2${DOMAIN_SUFFIX}
+          - portal${DOMAIN_SUFFIX}
+          - one${DOMAIN_SUFFIX}
+          - two${DOMAIN_SUFFIX}
           - proxy${DOMAIN_SUFFIX}
 
-  haproxy:
-    image: haproxy
-    expose:
-      - 80
+  portal:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.php72
     environment:
-      VIRTUAL_HOST: "proxy${DOMAIN_SUFFIX}"
+      SQL: 'sqlite'
+      # SQL: 'mysql'
+      # SQL: 'pgsql'
+      NEXTCLOUD_AUTOINSTALL: "YES"
+      NEXTCLOUD_AUTOINSTALL_APPS:
+      WITH_REDIS: "YES"
+      VIRTUAL_HOST: "portal${DOMAIN_SUFFIX}"
+      HTTPS_METHOD: "noredirect"
+      ADDITIONAL_APPS_PATH:
+      NEXTCLOUD_TRUSTED_DOMAINS:
+      GS_MODE: "master"
+      SSO_DOMAIN: "sso${DOMAIN_SUFFIX}"
     volumes:
-      - ./docker/configs/haproxy.conf:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - '${REPO_PATH_SERVER:-/home/jus/repos/nextcloud/server}:/var/www/html'
+      - data:/var/www/html/data
+      - config:/var/www/html/config
+      - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-extra'
+      - /var/www/html/apps-writable
+      - ./data/skeleton/:/skeleton
+      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
+      - ./data/shared:/shared
+    ports:
+      - "${PORTBASE:-800}7:80"
+    depends_on:
+      #- database-mysql
+      - database-postgres
+      - redis
+      - mail
 
   nextcloud:
     build:
       context: ./docker
       dockerfile: Dockerfile.php72
     environment:
-      # SQL: 'sqlite'
+      SQL: 'sqlite'
       # SQL: 'mysql'
-      SQL: 'pgsql'
+      # SQL: 'pgsql'
       NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
-      VIRTUAL_HOST: "nextcloud${DOMAIN_SUFFIX}"
+      VIRTUAL_HOST: "one${DOMAIN_SUFFIX}"
       HTTPS_METHOD: "noredirect"
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
+      GS_MODE: "slave"
+      LDAP_USER_FILTER: "(&(objectclass=inetOrgPerson)(employeeType=Employee))"
     volumes:
       - '${REPO_PATH_SERVER:-/home/jus/repos/nextcloud/server}:/var/www/html'
-      - data:/var/www/html/data
-      - config:/var/www/html/config
+      - data1:/var/www/html/data
+      - config1:/var/www/html/config
       - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-extra'
       - /var/www/html/apps-writable
       - ./data/skeleton/:/skeleton
@@ -81,20 +103,22 @@ services:
       context: ./docker
       dockerfile: Dockerfile.php72
     environment:
-      # SQL: 'sqlite'
+      SQL: 'sqlite'
       # SQL: 'mysql'
-      SQL: 'pgsql'
-      NEXTCLOUD_AUTOINSTALL: "NO"
+      # SQL: 'pgsql'
+      NEXTCLOUD_AUTOINSTALL: "YES"
       NEXTCLOUD_AUTOINSTALL_APPS:
       WITH_REDIS: "YES"
-      VIRTUAL_HOST: "nextcloud2${DOMAIN_SUFFIX}"
+      VIRTUAL_HOST: "two${DOMAIN_SUFFIX}"
       HTTPS_METHOD: "noredirect"
       ADDITIONAL_APPS_PATH:
       NEXTCLOUD_TRUSTED_DOMAINS:
+      GS_MODE: "slave"
+      LDAP_USER_FILTER: "(&(objectclass=inetOrgPerson)(|(employeeType=Normal)(employeeType=Contract)))"
     volumes:
       - '${REPO_PATH_SERVER:-/home/jus/repos/nextcloud/server}:/var/www/html'
-      - data:/var/www/html/data
-      - config:/var/www/html/config
+      - data2:/var/www/html/data
+      - config2:/var/www/html/config
       - '${ADDITIONAL_APPS_PATH:-./data/apps-extra}:/var/www/html/apps-extra'
       - /var/www/html/apps-writable
       - ./data/skeleton/:/skeleton
@@ -104,81 +128,6 @@ services:
     depends_on:
       #- database-mysql
       - database-postgres
-      - redis
-      - mail
-
-  stable16:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile.php72
-    environment:
-      SQL: 'sqlite'
-      NEXTCLOUD_AUTOINSTALL: "YES"
-      NEXTCLOUD_AUTOINSTALL_APPS:
-      WITH_REDIS: "YES"
-      VIRTUAL_HOST: stable16${DOMAIN_SUFFIX}
-      HTTPS_METHOD: "noredirect"
-      ADDITIONAL_APPS_PATH:
-      NEXTCLOUD_TRUSTED_DOMAINS:
-    volumes:
-      - /home/jus/repos/nextcloud/stable16:/var/www/html
-      - /var/www/html/data
-      - /var/www/html/config
-      - /home/jus/repos/nextcloud/stable16/apps-extra:/var/www/html/apps-extra
-      - /var/www/html/apps-writable
-      - ./data/skeleton/:/skeleton
-      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
-    depends_on:
-      - redis
-      - mail
-
-  stable17:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile.php72
-    environment:
-      SQL: 'sqlite'
-      NEXTCLOUD_AUTOINSTALL: "YES"
-      NEXTCLOUD_AUTOINSTALL_APPS:
-      WITH_REDIS: "YES"
-      VIRTUAL_HOST: stable17${DOMAIN_SUFFIX}
-      HTTPS_METHOD: "noredirect"
-      ADDITIONAL_APPS_PATH:
-      NEXTCLOUD_TRUSTED_DOMAINS:
-    volumes:
-      - /home/jus/repos/nextcloud/stable17:/var/www/html
-      - /home/jus/repos/nextcloud/stable17/apps-extra:/var/www/html/apps-extra
-      - /var/www/html/data
-      - /var/www/html/config
-      - /var/www/html/apps-writable
-      - ./data/skeleton/:/skeleton
-      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
-    depends_on:
-      - redis
-      - mail
-
-  stable18:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile.php72
-    environment:
-      SQL: 'sqlite'
-      NEXTCLOUD_AUTOINSTALL: "YES"
-      NEXTCLOUD_AUTOINSTALL_APPS:
-      WITH_REDIS: "YES"
-      VIRTUAL_HOST: stable18${DOMAIN_SUFFIX}
-      HTTPS_METHOD: "noredirect"
-      ADDITIONAL_APPS_PATH:
-      NEXTCLOUD_TRUSTED_DOMAINS:
-    volumes:
-      - /home/jus/repos/nextcloud/stable18:/var/www/html
-      - /home/jus/repos/nextcloud/stable18/apps-extra:/var/www/html/apps-extra
-      - /var/www/html/data
-      - /var/www/html/config
-      - /var/www/html/apps-writable
-      - ./data/skeleton/:/skeleton
-      - ./data/additional.config.php:/var/www/html/config/additional.config.php:ro
-    depends_on:
       - redis
       - mail
 
@@ -222,7 +171,10 @@ services:
       - "${PORTBASE:-800}8:80"
 
   saml:
-    image: unicon/simplesamlphp
+    #image: unicon/simplesamlphp
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.saml
     volumes:
       - ./docker/configs/var-simplesamlphp/config:/var/simplesamlphp/config
       - ./docker/configs/var-simplesamlphp/cert:/var/simplesamlphp/cert
@@ -238,101 +190,19 @@ services:
       VIRTUAL_HOST: "mail${DOMAIN_SUFFIX}"
       VIRTUAL_PORT: 8025
 
-
-  smb:
-    image: dperson/samba
-    ports:
-      - 139
-      - 445
-    environment:
-      # -u "<username;password>[;ID;group;GID]"
-      USER: "admin;admin"
-      USER2: "user1;user1"
-      USER3: "user1;user1"
-      # -s "<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]"
-      SHARE: "public;/smbmount;yes;no;yes"
-      SHARE2: "user1 private share;/smb/user1;no;no;no;user1"
-      SHARE3: "user2 private share;/smb/user2;no;no;no;user2"
-    volumes:
-      - smb:/smbmount
-
-  blackfire:
-    image: blackfire/blackfire
-    environment:
-      - BLACKFIRE_SERVER_ID
-      - BLACKFIRE_SERVER_TOKEN
-
-  collabora:
-    #image: collabora/code:4.0.9.4
-    image: collabora/online
-    expose:
-      - 9980
-    cap_add:
-      - MKNOD
-    environment:
-      domain: nextcloud${DOMAIN_SUFFIX}
-      dictionaries: de_DE en_US en_GB ar
-      username: admin
-      password: admin
-      VIRTUAL_HOST: collabora${DOMAIN_SUFFIX}
-      VIRTUAL_PORT: 9980
-      VIRTUAL_PROTO: https
-
-  collabora2:
-    image: collabora/code:latest
-    restart: on-failure
-    expose:
-      - 9980
-    cap_add:
-      - MKNOD
-    environment:
-      domain: nextcloud${DOMAIN_SUFFIX}
-      username: admin
-      password: admin
-      VIRTUAL_HOST: collabora2${DOMAIN_SUFFIX}
-      VIRTUAL_PORT: 9980
-      VIRTUAL_PROTO: https
-
-  onlyoffice:
-    image: onlyoffice/documentserver:latest
-    environment:
-      VIRTUAL_HOST: onlyoffice${DOMAIN_SUFFIX}
-    expose:
-      - '80'
-    volumes:
-      - document_data:/var/www/onlyoffice/Data
-      - document_log:/var/log/onlyoffice
-
-  minio:
-    image: minio/minio
-    environment:
-      MINIO_ACCESS_KEY: nextcloud
-      MINIO_SECRET_KEY: nextcloud
-    ports:
-      - "${PORTBASE:-800}5:9000"
-    volumes:
-      - objectstorage_minio:/data
-    command: server /data
-
-  s3:
-    image: lphoward/fake-s3
-    expose:
-      - 4569
-    volumes:
-      - objectstorage_fakes3:/fakes3_root
-
-  elasticsearch:
+  lookupserver:
     build:
       context: ./docker
-      dockerfile: Dockerfile.elasticsearch
-    environment:
-      discovery.type: single-node
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      dockerfile: Dockerfile.lookupserver
+
 
 volumes:
   data:
+  data1:
+  data2:
   config:
+  config1:
+  config2:
   document_data:
   document_log:
   objectstorage_fakes3:

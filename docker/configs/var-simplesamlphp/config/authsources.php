@@ -21,13 +21,14 @@ $config = array(
     ),
     */
 
-    
+    /*
     'example-static' => array(
         'exampleauth:Static',
         'uid' => array('testuser'),
         'eduPersonAffiliation' => array('member', 'employee'),
         'cn' => array('Test User'),
     ),
+    */
 
     /*
     'example-userpass' => array(
@@ -198,7 +199,7 @@ $config = array(
     ),
     */
 
-    /*
+
     // Example of a LDAP authentication source.
     'example-ldap' => array(
         'ldap:LDAP',
@@ -209,10 +210,10 @@ $config = array(
         //'remember.username.checked' => FALSE,
 
         // The hostname of the LDAP server.
-        'hostname' => 'ldap.example.org',
+        'hostname' => 'ldap',
 
         // Whether SSL/TLS should be used when contacting the LDAP server.
-        'enable_tls' => TRUE,
+        'enable_tls' => FALSE,
 
         // Whether debug output from the LDAP library should be enabled.
         // Default is FALSE.
@@ -227,7 +228,7 @@ $config = array(
         'port' => 389,
 
         // Set whether to follow referrals. AD Controllers may require FALSE to function.
-        'referrals' => TRUE,
+        'referrals' => FALSE,
 
         // Which attributes should be retrieved from the LDAP server.
         // This can be an array of attribute names, or NULL, in which case
@@ -242,12 +243,12 @@ $config = array(
 
         // As an alternative to specifying a pattern for the users DN, it is possible to
         // search for the username in a set of attributes. This is enabled by this option.
-        'search.enable' => FALSE,
+        'search.enable' => TRUE,
 
         // The DN which will be used as a base for the search.
         // This can be a single string, in which case only that DN is searched, or an
         // array of strings, in which case they will be searched in the order given.
-        'search.base' => 'ou=people,dc=example,dc=org',
+        'search.base' => 'dc=example,dc=org',
 
         // The attribute(s) the username should match against.
         //
@@ -257,8 +258,8 @@ $config = array(
 
         // The username & password the SimpleSAMLphp should bind to before searching. If
         // this is left as NULL, no bind will be performed before searching.
-        'search.username' => NULL,
-        'search.password' => NULL,
+        'search.username' => 'admin',
+        'search.password' => 'admin',
 
         // If the directory uses privilege separation,
         // the authenticated user may not be able to retrieve
@@ -273,7 +274,7 @@ $config = array(
         'priv.password' => NULL,
 
     ),
-    */
+
 
     /*
     // Example of an LDAPMulti authentication source.
